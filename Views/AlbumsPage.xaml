@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="Dustan.Views.AlbumsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="using:Dustan.Helpers"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Padding="16">
+        <GridView
+            x:Name="AlbumGrid"
+            IsItemClickEnabled="True"
+            ItemClick="AlbumGrid_ItemClick"
+            SelectionMode="None">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="helpers:AlbumCard">
+                    <StackPanel Width="160" Margin="8" Spacing="6">
+                        <StackPanel.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Click="EditAlbum_Click" Tag="{x:Bind}" Text="Edit album metadata" />
+                            </MenuFlyout>
+                        </StackPanel.ContextFlyout>
+                        <Border
+                            Width="160"
+                            Height="160"
+                            CornerRadius="4">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{x:Bind Artwork}" Stretch="UniformToFill" />
+                            </Border.Background>
+                        </Border>
+                        <TextBlock
+                            FontWeight="SemiBold"
+                            Text="{x:Bind Album.Name}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap"
+                            ToolTipService.ToolTip="{x:Bind Album.Name}" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind Album.AlbumArtist}"
+                            TextTrimming="CharacterEllipsis"
+                            TextWrapping="NoWrap" />
+                    </StackPanel>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+    </Grid>
+</Page>
