@@ -42,7 +42,7 @@ BundleArtifacts/
 publish/
 PublishScripts/
 
-# Local library index / cache (stored beside the exe at runtime)
+# Local library index / cache (legacy beside-exe + LocalApplicationData)
 settings.json
 library.db
 library.db-*

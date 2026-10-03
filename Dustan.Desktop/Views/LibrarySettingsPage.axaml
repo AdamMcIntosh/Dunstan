@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Dustan.Views.LibrarySettingsPage">
+    <ScrollViewer Padding="24">
+        <StackPanel MaxWidth="720" Spacing="16">
+            <TextBlock FontSize="24" FontWeight="SemiBold" Text="Library" />
+            <TextBlock Opacity="0.75" TextWrapping="Wrap"
+                       Text="Point this app at your NAS music folder. On Windows, prefer a UNC path like \\nas\share\music. On macOS and Linux, mount the share first (for example /Volumes/music or /mnt/music). Audio stays on the share; only the index and thumbnails are stored in local app data." />
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <TextBox x:Name="LibraryPathBox" Watermark="\\nas\share\music or /mnt/music" />
+                <Button Grid.Column="1" Content="Browse…" Click="BrowseButton_Click" />
+            </Grid>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="SaveScanButton" Content="Save &amp; Scan" Click="SaveScanButton_Click" />
+                <Button x:Name="RescanButton" Content="Rescan" Click="RescanButton_Click" />
+                <Button x:Name="CancelScanButton" Content="Cancel scan" Click="CancelScanButton_Click" />
+            </StackPanel>
+
+            <Border Padding="12" CornerRadius="4" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="StatusTitle" FontWeight="SemiBold" Text="Ready" />
+                    <TextBlock x:Name="StatusMessage" Opacity="0.8" TextWrapping="Wrap" Text="Set a library path to begin." />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="ProgressSummary" Text="" />
+                <TextBlock x:Name="ProgressPath" Opacity="0.7" FontSize="12" Text="" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

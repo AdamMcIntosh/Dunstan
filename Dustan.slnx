@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Dustan.Core/Dustan.Core.csproj" />
+  <Project Path="Dustan.Desktop/Dustan.Desktop.csproj" />
+</Solution>

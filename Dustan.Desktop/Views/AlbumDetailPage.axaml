@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="using:Dustan.Models"
+             x:Class="Dustan.Views.AlbumDetailPage">
+    <Grid RowDefinitions="Auto,*" Margin="16" RowSpacing="12">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+            <Border Width="180" Height="180" CornerRadius="4" ClipToBounds="True">
+                <Image x:Name="ArtImage" Stretch="UniformToFill" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
+                <TextBlock x:Name="AlbumTitle" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock x:Name="AlbumArtist" Opacity="0.7" />
+                <TextBlock x:Name="AlbumMeta" FontSize="12" Opacity="0.7" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="Play album" Click="PlayAlbum_Click" />
+                    <Button Content="Edit album" Click="EditAlbum_Click" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <DockPanel Grid.Row="1">
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="40,2*,*,80" ColumnSpacing="12" Margin="12,4">
+                <TextBlock Text="#" />
+                <TextBlock Grid.Column="1" Text="Title" />
+                <TextBlock Grid.Column="2" Text="Artist" />
+                <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="Time" />
+            </Grid>
+            <ListBox x:Name="TrackList" DoubleTapped="TrackList_DoubleTapped" KeyDown="TrackList_KeyDown">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:TrackInfo">
+                        <Grid ColumnDefinitions="40,2*,*,80" ColumnSpacing="12" Margin="0,4">
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Edit metadata" Click="EditTrack_Click" Tag="{Binding}" />
+                                </ContextMenu>
+                            </Grid.ContextMenu>
+                            <TextBlock Text="{Binding TrackNumber}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="2" Text="{Binding Artist}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding DurationDisplay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </DockPanel>
+    </Grid>
+</UserControl>

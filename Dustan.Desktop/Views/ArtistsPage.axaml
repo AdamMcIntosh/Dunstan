@@ -1,0 +1,15 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="using:Dustan.Models"
+             x:Class="Dustan.Views.ArtistsPage">
+    <ListBox x:Name="ArtistList" Padding="16" DoubleTapped="ArtistList_DoubleTapped">
+        <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="models:ArtistInfo">
+                <Grid ColumnDefinitions="*,Auto" Margin="4,8">
+                    <TextBlock FontSize="16" Text="{Binding Name}" />
+                    <TextBlock Grid.Column="1" Opacity="0.7" Text="{Binding AlbumCount}" />
+                </Grid>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
+</UserControl>

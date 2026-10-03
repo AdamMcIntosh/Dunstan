@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="using:Dustan.Helpers"
+             x:Class="Dustan.Views.AlbumsPage">
+    <ListBox x:Name="AlbumGrid"
+             Padding="16"
+             Background="Transparent"
+             SelectionMode="Single"
+             DoubleTapped="AlbumGrid_DoubleTapped">
+        <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+                <WrapPanel />
+            </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+        <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="helpers:AlbumCard">
+                <StackPanel Width="160" Margin="8" Spacing="6">
+                    <StackPanel.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Edit album metadata" Click="EditAlbum_Click" Tag="{Binding}" />
+                        </ContextMenu>
+                    </StackPanel.ContextMenu>
+                    <Border Width="160" Height="160" CornerRadius="4" ClipToBounds="True">
+                        <Image Source="{Binding Artwork}" Stretch="UniformToFill" />
+                    </Border>
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Album.Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Opacity="0.7" FontSize="12" Text="{Binding Album.AlbumArtist}" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </DataTemplate>
+        </ListBox.ItemTemplate>
+    </ListBox>
+</UserControl>

@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="using:Dustan.Helpers"
+             xmlns:models="using:Dustan.Models"
+             x:Class="Dustan.Views.ArtistDetailPage">
+    <ScrollViewer Padding="16">
+        <StackPanel Spacing="16">
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="ArtistTitle" FontSize="24" FontWeight="SemiBold" />
+                <TextBlock x:Name="ArtistMeta" Opacity="0.7" />
+                <Button HorizontalAlignment="Left" Content="Play all" Click="PlayAll_Click" />
+            </StackPanel>
+
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Albums" />
+            <ListBox x:Name="AlbumGrid" Background="Transparent" DoubleTapped="AlbumGrid_DoubleTapped">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="helpers:AlbumCard">
+                        <StackPanel Width="140" Margin="6" Spacing="4">
+                            <StackPanel.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Edit album metadata" Click="EditAlbum_Click" Tag="{Binding}" />
+                                </ContextMenu>
+                            </StackPanel.ContextMenu>
+                            <Border Width="140" Height="140" CornerRadius="4" ClipToBounds="True">
+                                <Image Source="{Binding Artwork}" Stretch="UniformToFill" />
+                            </Border>
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Album.Name}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <TextBlock FontSize="18" FontWeight="SemiBold" Text="Tracks" />
+            <ListBox x:Name="TrackList" DoubleTapped="TrackList_DoubleTapped">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:TrackInfo">
+                        <Grid ColumnDefinitions="2*,*,80" ColumnSpacing="12" Margin="0,4">
+                            <Grid.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Edit metadata" Click="EditTrack_Click" Tag="{Binding}" />
+                                </ContextMenu>
+                            </Grid.ContextMenu>
+                            <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{Binding Album}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding DurationDisplay}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

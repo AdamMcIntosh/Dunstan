@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Dustan.Controls.TransportBar">
+    <Border Padding="16,8" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="2*,3*,*" ColumnSpacing="12">
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock x:Name="TitleText" FontWeight="SemiBold" Text="Nothing playing" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="ArtistText" Opacity="0.7" FontSize="12" Text="" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <ToggleButton x:Name="ShuffleButton" Content="Shuffle" Click="ShuffleButton_Click" ToolTip.Tip="Shuffle" />
+                    <Button x:Name="PreviousButton" Content="Prev" Click="PreviousButton_Click" />
+                    <Button x:Name="PlayPauseButton" Content="Play" Width="72" Click="PlayPauseButton_Click" />
+                    <Button x:Name="NextButton" Content="Next" Click="NextButton_Click" />
+                    <Button x:Name="RepeatModeButton" Content="Repeat" Opacity="0.5" Click="RepeatModeButton_Click" ToolTip.Tip="Repeat: Off" />
+                </StackPanel>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <TextBlock x:Name="PositionText" VerticalAlignment="Center" FontSize="12" Text="0:00" />
+                    <Slider x:Name="SeekSlider" Grid.Column="1" Minimum="0" Maximum="100"
+                            PointerPressed="SeekSlider_PointerPressed"
+                            PointerReleased="SeekSlider_PointerReleased"
+                            ValueChanged="SeekSlider_ValueChanged" />
+                    <TextBlock x:Name="DurationText" Grid.Column="2" VerticalAlignment="Center" FontSize="12" Text="0:00" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="8">
+                <TextBlock VerticalAlignment="Center" Text="Vol" />
+                <Slider x:Name="VolumeSlider" Width="120" Minimum="0" Maximum="100" ValueChanged="VolumeSlider_ValueChanged" />
+                <TextBlock x:Name="VolumePercentText" MinWidth="36" VerticalAlignment="Center" Text="80%" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,17 +1,3 @@
 <Project>
-  <!--
-    VS Community 2026 has no VC\Tools\MSVC; Build Tools 2026 does.
-    WinAppSDK probes Community's VsInstallRoot and throws GetLatestMSVCVersion.
-    Point VCToolsInstallDir / VCInstallPath* at a real MSVC toolset.
-  -->
-  <PropertyGroup Condition="'$(VCToolsInstallDir)' == ''">
-    <_DustanMsvcCandidate Condition="Exists('C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\')">C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.51.36231\</_DustanMsvcCandidate>
-    <_DustanMsvcCandidate Condition="'$(_DustanMsvcCandidate)' == '' and Exists('$(MSBuildProgramFiles32)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.51.36231\')">$(MSBuildProgramFiles32)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.51.36231\</_DustanMsvcCandidate>
-    <VCToolsInstallDir Condition="'$(_DustanMsvcCandidate)' != ''">$(_DustanMsvcCandidate)</VCToolsInstallDir>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(VCToolsInstallDir)' != ''">
-    <VCInstallPath32 Condition="'$(VCInstallPath32)' == ''">$(VCToolsInstallDir)bin\HostX64\x86\vcmeta.dll</VCInstallPath32>
-    <VCInstallPath64 Condition="'$(VCInstallPath64)' == ''">$(VCToolsInstallDir)bin\HostX64\x64\vcmeta.dll</VCInstallPath64>
-  </PropertyGroup>
+  <!-- Shared MSBuild defaults. Platform-specific WinAppSDK MSVC workarounds are no longer required. -->
 </Project>

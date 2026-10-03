@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Dustan.Views.EditMetadataDialog"
+        Title="Edit metadata"
+        Width="480"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+    <DockPanel Margin="16" LastChildFill="True">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,16,0,0">
+            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click" />
+            <Button x:Name="SaveButton" Content="Save" Click="SaveButton_Click" />
+        </StackPanel>
+        <ScrollViewer MaxHeight="520">
+            <StackPanel Spacing="12">
+                <TextBlock x:Name="ScopeText" Opacity="0.75" TextWrapping="Wrap" />
+                <TextBox x:Name="TitleBox" Watermark="Title" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <NumericUpDown x:Name="TrackNumberBox" Minimum="0" FormatString="0" />
+                    <NumericUpDown x:Name="DiscNumberBox" Grid.Column="1" Minimum="0" FormatString="0" />
+                </Grid>
+                <TextBox x:Name="ArtistBox" Watermark="Artist" />
+                <TextBox x:Name="AlbumBox" Watermark="Album" />
+                <TextBox x:Name="AlbumArtistBox" Watermark="Album artist" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <NumericUpDown x:Name="YearBox" Minimum="0" Maximum="9999" FormatString="0" />
+                    <TextBox x:Name="GenreBox" Grid.Column="1" Watermark="Genre" />
+                </Grid>
+                <TextBlock Text="Artwork" />
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <Border Width="96" Height="96" CornerRadius="4" ClipToBounds="True">
+                        <Image x:Name="ArtPreview" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="8">
+                        <Button Content="Change artwork…" Click="ChangeArt_Click" />
+                        <CheckBox x:Name="RemoveArtBox" Content="Remove artwork" />
+                    </StackPanel>
+                </Grid>
+                <ProgressBar x:Name="SaveProgress" IsIndeterminate="True" IsVisible="False" />
+                <TextBlock x:Name="ErrorText" Foreground="IndianRed" TextWrapping="Wrap" IsVisible="False" />
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
