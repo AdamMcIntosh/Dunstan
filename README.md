@@ -1,58 +1,61 @@
 # Dustan
 
-Cross-platform music player for a local NAS library (FLAC/MP3). Streams audio from the share; keeps only a SQLite index, tags, and small artwork thumbnails in local app data.
+Cross-platform NAS music player for FLAC/MP3. Streams from the share; keeps a local index. Windows, macOS, Linux.
 
-Runs on Windows, macOS, and Linux (Avalonia + LibVLC).
+Audio files stay on the NAS. Dustan only stores a SQLite library index, tags, and small artwork thumbnails in local app data.
 
 ## Install
 
-### Windows
+Download the latest zip from [GitHub Releases](https://github.com/AdamMcIntosh/Dunstan/releases).
 
-1. Download `Dustan-<version>-win-x64.zip` from GitHub Releases.
-2. Extract the zip and run `Dustan.exe`.
+| Platform | Asset | Notes |
+| --- | --- | --- |
+| Windows x64 | `Dustan-<version>-win-x64.zip` | Extract and run `Dustan.exe`. LibVLC is included. |
+| macOS Apple Silicon | `Dustan-<version>-osx-arm64.zip` | Extract and run `Dustan`. LibVLC is included. |
+| macOS Intel | `Dustan-<version>-osx-x64.zip` | Extract and run `Dustan`. LibVLC is included. |
+| Linux x64 | `Dustan-<version>-linux-x64.zip` | Install system LibVLC, then run `./Dustan`. |
 
-LibVLC is bundled in the Windows zip.
+On Debian/Ubuntu:
 
-### macOS
-
-1. Download `Dustan-<version>-osx-arm64.zip` or `osx-x64`.
-2. Extract and run `Dustan`.
-
-LibVLC is bundled for macOS builds produced on a Mac.
-
-### Linux
-
-1. Download `Dustan-<version>-linux-x64.zip`.
-2. Install system LibVLC (for example `sudo apt install libvlc-dev vlc` on Debian/Ubuntu).
-3. Run `./Dustan`.
+```bash
+sudo apt install libvlc-dev vlc
+chmod +x Dustan
+./Dustan
+```
 
 ## First use
 
 1. Open **Library**.
-2. Browse to your music folder, or paste a path:
+2. Choose the music folder, or paste a path:
    - Windows: `\\nas\share\music` (mapped drives are converted to UNC when possible)
-   - macOS / Linux: a **mounted** folder such as `/Volumes/music` or `/mnt/music` (`smb://` URLs are not scanned directly)
+   - macOS / Linux: a **mounted** folder such as `/Volumes/music` or `/mnt/music` (`smb://` URLs are not scanned)
 3. Click **Save & Scan**.
-4. Browse Albums / Artists / Tracks and play. Audio files are never copied off the NAS.
+4. Browse Albums / Artists / Tracks and play.
 
-Index, settings, and thumbnails live in local app data (`%LOCALAPPDATA%\Dustan` on Windows, `~/.local/share/Dustan` on Linux, `~/Library/Application Support/Dustan` on macOS). If you previously ran the unpackaged WinUI build, those sidecar files next to the old exe are copied here on first launch.
+Use one canonical mount path per library. Scanning the same files from two different mount points creates duplicate index rows.
 
-Use one canonical mount path per library. Scanning the same files from two different mount points will create duplicate index rows.
+## Data on disk
+
+Settings, `library.db`, and artwork live in local app data:
+
+- Windows: `%LOCALAPPDATA%\Dustan`
+- Linux: `~/.local/share/Dustan`
+- macOS: `~/Library/Application Support/Dustan`
+
+If you previously ran the unpackaged WinUI build, sidecar files next to the old exe are copied here on first launch.
 
 ## Development
 
-Requirements: .NET 8 SDK. Windows 10 19041+ / Windows 11, macOS, or Linux.
+Requirements: .NET 8 SDK on Windows 10 19041+ / Windows 11, macOS, or Linux. Linux also needs LibVLC installed.
 
 ```powershell
-dotnet build Dustan.Desktop/Dustan.Desktop.csproj -c Debug
+dotnet build Dustan.slnx -c Debug
 dotnet run --project Dustan.Desktop/Dustan.Desktop.csproj -c Debug --no-build
 ```
 
-Linux also needs LibVLC installed on the machine.
+`Dustan.slnx` contains `Dustan.Core` (library, scanner, tags) and `Dustan.Desktop` (Avalonia UI + LibVLC).
 
-Solution file: `Dustan.slnx` (`Dustan.Core` + `Dustan.Desktop`).
-
-### Publish a Release zip
+### Publish a zip locally
 
 ```powershell
 .\scripts\Publish-Dustan.ps1
@@ -60,17 +63,17 @@ Solution file: `Dustan.slnx` (`Dustan.Core` + `Dustan.Desktop`).
 .\scripts\Publish-Dustan.ps1 -Runtime linux-x64
 ```
 
-Produces `artifacts/Dustan-<version>-<runtime>.zip`. Pass `-Version 1.0.1` to override the `<Version>` property in `Dustan.Desktop/Dustan.Desktop.csproj`.
+Output is `artifacts/Dustan-<version>-<runtime>.zip`. Pass `-Version 1.0.1` to override the `<Version>` property in `Dustan.Desktop/Dustan.Desktop.csproj`.
 
 ### GitHub Releases
 
-CI builds Release on Windows, macOS, and Linux for every push/PR.
+CI builds Release on Windows, macOS, and Linux for every push and pull request.
 
-Pushing a version tag publishes self-contained zips and creates a GitHub Release:
+Push a version tag to publish self-contained zips and create a GitHub Release:
 
 ```powershell
 git tag v1.0.1
 git push origin v1.0.1
 ```
 
-That produces `Dustan-1.0.1-win-x64.zip`, `osx-arm64`, `osx-x64`, and `linux-x64`. You can also run the **Release** workflow from the Actions tab (`workflow_dispatch`) to build a draft or a tagged set of assets without pushing locally.
+That produces `win-x64`, `osx-arm64`, `osx-x64`, and `linux-x64` assets. You can also run the **Release** workflow from the Actions tab.
