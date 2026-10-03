@@ -71,6 +71,7 @@ jobs:
   github-release:
     name: GitHub Release
     needs: publish
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +95,15 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: Dustan-*
           merge-multiple: true
+
+      - name: Collect zip assets
+        run: |
+          mkdir -p assets
+          find dist -name '*.zip' -print -exec cp {} assets/ \;
+          ls -la assets
+          test -n "$(ls -A assets/*.zip 2>/dev/null)"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -103,5 +112,6 @@ jobs:
           name: Dustan ${{ steps.version.outputs.value }}
           draft: ${{ steps.version.outputs.draft == 'true' }}
           generate_release_notes: true
-          files: dist/*.zip
+          files: assets/*.zip
           fail_on_unmatched_files: true
+          make_latest: true

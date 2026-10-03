@@ -17,7 +17,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..")
-$csproj = Join-Path $root "Dustan.Desktop\Dustan.Desktop.csproj"
+$csproj = Join-Path (Join-Path $root "Dustan.Desktop") "Dustan.Desktop.csproj"
 if (-not (Test-Path $csproj)) {
     throw "Dustan.Desktop.csproj not found at $csproj"
 }
@@ -38,10 +38,10 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     throw "Version is empty"
 }
 
-$publishDir = Join-Path $root "artifacts\publish\$Runtime"
+$publishDir = Join-Path (Join-Path (Join-Path $root "artifacts") "publish") $Runtime
 $artifactsDir = Join-Path $root "artifacts"
 $zipPath = Join-Path $artifactsDir "Dustan-$Version-$Runtime.zip"
-$useR2R = $Runtime -eq "win-x64" -or $Runtime -eq "linux-x64" -or $Runtime -eq "osx-arm64" -or $Runtime -eq "osx-x64"
+$useR2R = $Runtime -eq "win-x64"
 
 Write-Host "Publishing Dustan $Version ($Configuration, $Runtime, self-contained)..."
 

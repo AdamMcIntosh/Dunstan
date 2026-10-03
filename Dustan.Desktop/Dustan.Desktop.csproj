@@ -13,6 +13,7 @@
     <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +28,7 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.3.6" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="LibVLCSharp" Version="3.9.4" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
-    <PackageReference Include="VideoLAN.LibVLC.Mac" Version="3.0.21" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="VideoLAN.LibVLC.Mac" Version="3.0.20" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
   </ItemGroup>
 
   <ItemGroup>
