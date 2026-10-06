@@ -1,6 +1,6 @@
 # Dustan
 
-Cross-platform NAS music player for FLAC/MP3. Streams from the share; keeps a local index. Windows, macOS, Linux.
+Cross-platform NAS music player for FLAC/MP3. Streams from the share; keeps a local index. Windows and Linux.
 
 Audio files stay on the NAS. Dustan only stores a SQLite library index, tags, and small artwork thumbnails in local app data.
 
@@ -11,8 +11,6 @@ Download the latest zip from [GitHub Releases](https://github.com/AdamMcIntosh/D
 | Platform | Asset | Notes |
 | --- | --- | --- |
 | Windows x64 | `Dustan-<version>-win-x64.zip` | Extract and run `Dustan.exe`. LibVLC is included. |
-| macOS Apple Silicon | `Dustan-<version>-osx-arm64.zip` | Extract and run `Dustan`. LibVLC is included. |
-| macOS Intel | `Dustan-<version>-osx-x64.zip` | Extract and run `Dustan`. LibVLC is included. |
 | Linux x64 | `Dustan-<version>-linux-x64.zip` | Install system LibVLC, then run `./Dustan`. |
 
 On Debian/Ubuntu:
@@ -59,7 +57,6 @@ dotnet run --project Dustan.Desktop/Dustan.Desktop.csproj -c Debug --no-build
 
 ```powershell
 .\scripts\Publish-Dustan.ps1
-.\scripts\Publish-Dustan.ps1 -Runtime osx-arm64
 .\scripts\Publish-Dustan.ps1 -Runtime linux-x64
 ```
 
@@ -76,4 +73,4 @@ git tag v1.0.1
 git push origin v1.0.1
 ```
 
-That produces `win-x64`, `osx-arm64`, `osx-x64`, and `linux-x64` assets. You can also run the **Release** workflow from the Actions tab.
+That produces `win-x64` and `linux-x64` assets. You can also run the **Release** workflow from the Actions tab.
