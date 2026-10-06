@@ -7,7 +7,7 @@ public sealed class LibraryScanner
 {
     private static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".mp3", ".flac"
+        ".mp3", ".flac", ".m4a"
     };
 
     private readonly LibraryDb _db;
