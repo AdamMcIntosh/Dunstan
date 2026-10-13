@@ -21,6 +21,20 @@ public sealed class LibraryDb : IDisposable
         }.ToString();
     }
 
+    private LibraryDb(string connectionString, bool _) => _connectionString = connectionString;
+
+    /// <summary>
+    /// A separate read-only connection for browsing while a scan or tag edit writes through the main one.
+    /// It never migrates or modifies the database; WAL lets it read committed data concurrently.
+    /// </summary>
+    public static LibraryDb OpenReader(string databasePath) => new(new SqliteConnectionStringBuilder
+    {
+        DataSource = databasePath,
+        Mode = SqliteOpenMode.ReadOnly,
+        Cache = SqliteCacheMode.Private,
+        Pooling = false
+    }.ToString(), true);
+
     public void Initialize()
     {
         lock (_lock)
@@ -574,52 +588,34 @@ public sealed class LibraryDb : IDisposable
     public IReadOnlyList<ArtistInfo> GetArtists(string? search = null)
     {
         using var cmd = GetConnection().CreateCommand();
-        if (string.IsNullOrWhiteSpace(search))
+        // An artist is credited with a track when it performs it or is the album artist of its album.
+        // Grouped joins replace per-artist correlated subqueries (seconds on large libraries).
+        cmd.CommandText =
+            $$"""
+            WITH credits AS (
+                SELECT t.artist_id AS artist_id, t.id AS track_id, t.album_id AS album_id
+                FROM tracks t WHERE t.artist_id IS NOT NULL
+                UNION
+                SELECT ar.id, t.id, t.album_id FROM tracks t
+                JOIN albums a ON a.id = t.album_id
+                JOIN artists ar ON ar.name = a.album_artist COLLATE NOCASE
+            ),
+            album_credits AS (
+                SELECT artist_id, album_id FROM credits WHERE album_id IS NOT NULL
+                UNION
+                SELECT ar.id, a.id FROM albums a JOIN artists ar ON ar.name = a.album_artist COLLATE NOCASE
+            ),
+            track_counts AS (SELECT artist_id, COUNT(*) AS n FROM credits GROUP BY artist_id),
+            album_counts AS (SELECT artist_id, COUNT(*) AS n FROM album_credits GROUP BY artist_id)
+            SELECT ar.id, ar.name, COALESCE(ac.n, 0) AS album_count, COALESCE(tc.n, 0) AS track_count
+            FROM artists ar
+            LEFT JOIN album_counts ac ON ac.artist_id = ar.id
+            LEFT JOIN track_counts tc ON tc.artist_id = ar.id
+            {{(string.IsNullOrWhiteSpace(search) ? "" : "WHERE ar.name LIKE $q")}}
+            ORDER BY ar.name COLLATE NOCASE;
+            """;
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            cmd.CommandText =
-                """
-                SELECT ar.id, ar.name,
-                       (
-                         SELECT COUNT(*) FROM albums a
-                         WHERE a.album_artist = ar.name COLLATE NOCASE
-                            OR EXISTS (
-                                 SELECT 1 FROM tracks t
-                                 WHERE t.album_id = a.id AND t.artist_id = ar.id
-                            )
-                       ) AS album_count,
-                       (
-                         SELECT COUNT(*) FROM tracks t
-                         LEFT JOIN albums a ON a.id = t.album_id
-                         WHERE t.artist_id = ar.id
-                            OR a.album_artist = ar.name COLLATE NOCASE
-                       ) AS track_count
-                FROM artists ar
-                ORDER BY ar.name COLLATE NOCASE;
-                """;
-        }
-        else
-        {
-            cmd.CommandText =
-                """
-                SELECT ar.id, ar.name,
-                       (
-                         SELECT COUNT(*) FROM albums a
-                         WHERE a.album_artist = ar.name COLLATE NOCASE
-                            OR EXISTS (
-                                 SELECT 1 FROM tracks t
-                                 WHERE t.album_id = a.id AND t.artist_id = ar.id
-                            )
-                       ) AS album_count,
-                       (
-                         SELECT COUNT(*) FROM tracks t
-                         LEFT JOIN albums a ON a.id = t.album_id
-                         WHERE t.artist_id = ar.id
-                            OR a.album_artist = ar.name COLLATE NOCASE
-                       ) AS track_count
-                FROM artists ar
-                WHERE ar.name LIKE $q
-                ORDER BY ar.name COLLATE NOCASE;
-                """;
             cmd.Parameters.AddWithValue("$q", $"%{search.Trim()}%");
         }
 

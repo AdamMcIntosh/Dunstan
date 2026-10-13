@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Dustan.Desktop/Dustan.Desktop.csproj" />
+    <ProjectReference Include="../Dustan.Core/Dustan.Core.csproj" />
+    <ProjectReference Include="../Dustan.Bridge/Dustan.Bridge.csproj" />
   </ItemGroup>
 </Project>

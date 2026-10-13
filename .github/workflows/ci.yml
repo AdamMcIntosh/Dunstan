@@ -5,9 +5,12 @@ on:
     branches: [master, main]
   pull_request:
 
+env:
+  QT_VERSION: "6.8.3"
+
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
+  tests:
+    name: Library and bridge checks (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,8 +23,83 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore and build Release
-        run: dotnet build Dustan.Desktop/Dustan.Desktop.csproj -c Release --nologo
-
-      - name: Video, TV schedule and music regression checks
+      - name: Schedule, scan-safety, catalog and bridge protocol checks
         run: dotnet run --project Dustan.Tests/Dustan.Tests.csproj -c Release
+
+  qt-linux:
+    name: Qt app (Linux)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install libmpv and build tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libmpv-dev libgl-dev libxkbcommon-dev
+
+      # Ubuntu 24.04 ships Qt 6.4; the app needs 6.5+.
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+
+      - name: Build Release (UI and bridge)
+        run: |
+          cmake -S Dustan.Qt -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          test -x build/Dustan && test -x build/bridge/Dustan.Bridge
+
+  qt-windows:
+    name: Qt app (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          arch: win64_msvc2022_64
+          cache: true
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Fetch libmpv
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/fetch-libmpv-windows.ps1 -Destination deps/mpv
+
+      - name: Build Release (UI and bridge)
+        run: |
+          cmake -S Dustan.Qt -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DMPV_DIR="${{ github.workspace }}/deps/mpv"
+          cmake --build build
+
+  qt-macos:
+    name: Qt app (macOS)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install libmpv and build tools
+        run: brew install mpv ninja pkgconf
+
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+
+      - name: Build Release (UI and bridge)
+        run: |
+          cmake -S Dustan.Qt -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          test -x build/Dustan.app/Contents/MacOS/Dustan

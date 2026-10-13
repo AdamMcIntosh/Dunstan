@@ -9,6 +9,7 @@
 *.userosscache
 *.sln.docstates
 artifacts/
+Dustan.Qt/build/
 
 # Build logs
 [Ll]og/

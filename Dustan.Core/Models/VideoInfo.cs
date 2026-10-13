@@ -11,6 +11,8 @@ public sealed record VideoInfo
     public double DurationSeconds { get; init; }
     public double PositionSeconds { get; init; }
     public bool Watched { get; init; }
+    /// <summary>Last time playback progress was saved; absent in catalogs written by older builds.</summary>
+    public DateTimeOffset? LastPlayedUtc { get; init; }
     public string DurationLabel => DurationSeconds > 0 ? TimeSpan.FromSeconds(DurationSeconds).ToString(@"hh\:mm\:ss") : "Duration unavailable";
     public string ProgressLabel => Watched ? "Watched" : PositionSeconds > 0 ? "Resume at " + TimeSpan.FromSeconds(PositionSeconds).ToString(@"hh\:mm\:ss") : "Unwatched";
 }

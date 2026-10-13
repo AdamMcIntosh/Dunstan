@@ -32,6 +32,46 @@ public sealed class PlaybackService : IPlaybackService, IDisposable
         }
     }
 
+    /// <summary>The queue in playback order (shuffled when shuffle is on).</summary>
+    public IReadOnlyList<TrackInfo> PlayOrder
+    {
+        get
+        {
+            lock (_queueLock)
+            {
+                return _order.Select(i => _queue[i]).ToList();
+            }
+        }
+    }
+
+    /// <summary>Index of the current track within <see cref="PlayOrder"/>, or -1.</summary>
+    public int PlayOrderIndex
+    {
+        get
+        {
+            lock (_queueLock)
+            {
+                return _currentIndex;
+            }
+        }
+    }
+
+    /// <summary>Starts playing the track at an index of <see cref="PlayOrder"/> without reshuffling.</summary>
+    public void JumpTo(int playOrderIndex)
+    {
+        lock (_queueLock)
+        {
+            if (playOrderIndex < 0 || playOrderIndex >= _order.Count)
+            {
+                return;
+            }
+
+            _currentIndex = playOrderIndex;
+        }
+
+        _ = PlayCurrentAsync();
+    }
+
     public PlaybackService(IMediaEngine engine)
     {
         _engine = engine;

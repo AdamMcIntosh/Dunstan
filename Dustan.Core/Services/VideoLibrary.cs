@@ -72,7 +72,7 @@ public sealed class VideoLibrary
             {
                 var latest = _state.Videos.ToDictionary(v => v.Path, PathSafety.Comparer);
                 scanned = scanned.Select(v => latest.TryGetValue(v.Path, out var old)
-                    ? v with { PositionSeconds = old.PositionSeconds, Watched = old.Watched } : v).ToList();
+                    ? v with { PositionSeconds = old.PositionSeconds, Watched = old.Watched, LastPlayedUtc = old.LastPlayedUtc } : v).ToList();
                 Commit(new State { Root = root, Videos = scanned, Channels = _state.Channels });
             }
             return scanned.Count;
@@ -85,7 +85,20 @@ public sealed class VideoLibrary
         lock (_gate)
         {
             var videos = _state.Videos.Select(v => PathSafety.Comparer.Equals(v.Path, path)
-                ? v with { PositionSeconds = completed ? 0 : Math.Max(0, double.IsFinite(seconds) ? seconds : 0), Watched = v.Watched || completed } : v).ToList();
+                ? v with { PositionSeconds = completed ? 0 : Math.Max(0, double.IsFinite(seconds) ? seconds : 0), Watched = v.Watched || completed,
+                    LastPlayedUtc = DateTimeOffset.UtcNow } : v).ToList();
+            Commit(new State { Root = _state.Root, Videos = videos, Channels = _state.Channels });
+        }
+    }
+
+    /// <summary>Marks videos watched or unwatched in one write; either way their resume points are cleared.</summary>
+    public void SetWatched(IEnumerable<string> paths, bool watched)
+    {
+        var targets = paths.ToHashSet(PathSafety.Comparer);
+        lock (_gate)
+        {
+            var videos = _state.Videos.Select(v => targets.Contains(v.Path)
+                ? v with { PositionSeconds = 0, Watched = watched } : v).ToList();
             Commit(new State { Root = _state.Root, Videos = videos, Channels = _state.Channels });
         }
     }

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Dustan
+GenericName=Media Player
+Comment=Music, videos and TV channels from your NAS
+Exec=dustan %U
+Icon=dustan
+Terminal=false
+Categories=AudioVideo;Audio;Video;Player;
+Keywords=music;video;nas;tv;player;
+StartupWMClass=dustan

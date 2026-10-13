@@ -175,6 +175,8 @@ try
     Check(engine.IsPlaying && playback.CurrentTrack?.Title == "Music", "Existing music playback still starts");
     playback.Pause(); Check(!engine.IsPlaying, "Music can pause before video playback");
     playback.Play(); Check(engine.IsPlaying, "Music can resume after video playback");
+
+    await QtBridgeTests.RunAsync(Check, temp);
 }
 finally { Directory.Delete(temp, recursive: true); }
 

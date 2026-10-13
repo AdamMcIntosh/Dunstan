@@ -19,9 +19,11 @@ public static class AppPaths
 
     static AppPaths()
     {
-        var data = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Dustan");
+        // DUSTAN_DATA_DIR relocates all library data (portable installs, isolated tests).
+        var custom = Environment.GetEnvironmentVariable("DUSTAN_DATA_DIR");
+        var data = !string.IsNullOrWhiteSpace(custom)
+            ? Path.GetFullPath(custom)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Dustan");
         Directory.CreateDirectory(data);
         TryMigrateLegacySidecar(AppContext.BaseDirectory, data);
         DataDirectory = data;
