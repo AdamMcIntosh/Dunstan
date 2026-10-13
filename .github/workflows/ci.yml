@@ -21,4 +21,7 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Restore and build Release
-        run: dotnet build Dustan.slnx -c Release --nologo
+        run: dotnet build Dustan.Desktop/Dustan.Desktop.csproj -c Release --nologo
+
+      - name: Video, TV schedule and music regression checks
+        run: dotnet run --project Dustan.Tests/Dustan.Tests.csproj -c Release

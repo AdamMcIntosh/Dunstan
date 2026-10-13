@@ -26,12 +26,20 @@ public sealed class LibraryDb : IDisposable
         lock (_lock)
         {
             var conn = OpenConnectionUnlocked();
+            using var version = conn.CreateCommand();
+            version.CommandText = "PRAGMA user_version;";
+            // Once migrated, startup does not rewrite the entire music catalog.
+            if (Convert.ToInt64(version.ExecuteScalar()) >= 1) return;
+            using (var pragmas = conn.CreateCommand())
+            {
+                pragmas.CommandText = "PRAGMA journal_mode=WAL;";
+                pragmas.ExecuteNonQuery();
+            }
+            using var transaction = conn.BeginTransaction();
             using var cmd = conn.CreateCommand();
+            cmd.Transaction = transaction;
             cmd.CommandText =
                 """
-                PRAGMA journal_mode=WAL;
-                PRAGMA foreign_keys=ON;
-
                 CREATE TABLE IF NOT EXISTS artists (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL
@@ -78,40 +86,49 @@ public sealed class LibraryDb : IDisposable
                 """;
             cmd.ExecuteNonQuery();
 
-            EnsureAlbumFolderColumnUnlocked(conn);
-            RebuildAlbumFoldersUnlocked(conn);
+            EnsureAlbumFolderColumnUnlocked(conn, transaction);
+            RebuildAlbumFoldersUnlocked(conn, transaction);
+            cmd.CommandText = "PRAGMA user_version=1;";
+            cmd.ExecuteNonQuery();
+            transaction.Commit();
         }
     }
 
-    private static void EnsureAlbumFolderColumnUnlocked(SqliteConnection conn)
+    private static void EnsureAlbumFolderColumnUnlocked(SqliteConnection conn, SqliteTransaction transaction)
     {
         using (var info = conn.CreateCommand())
         {
+            info.Transaction = transaction;
             info.CommandText = "PRAGMA table_info(albums);";
             var hasFolder = false;
-            using var reader = info.ExecuteReader();
-            while (reader.Read())
+            using (var reader = info.ExecuteReader())
             {
-                if (string.Equals(reader.GetString(1), "folder_path", StringComparison.OrdinalIgnoreCase))
+                while (reader.Read())
                 {
-                    hasFolder = true;
-                    break;
+                    if (string.Equals(reader.GetString(1), "folder_path", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasFolder = true;
+                        break;
+                    }
                 }
             }
 
             if (!hasFolder)
             {
                 using var alter = conn.CreateCommand();
+                alter.Transaction = transaction;
                 alter.CommandText = "ALTER TABLE albums ADD COLUMN folder_path TEXT NOT NULL DEFAULT '';";
                 alter.ExecuteNonQuery();
             }
         }
 
         using var drop = conn.CreateCommand();
+        drop.Transaction = transaction;
         drop.CommandText = "DROP INDEX IF EXISTS idx_albums_unique;";
         drop.ExecuteNonQuery();
 
         using var create = conn.CreateCommand();
+        create.Transaction = transaction;
         create.CommandText =
             """
             CREATE UNIQUE INDEX IF NOT EXISTS idx_albums_unique
@@ -128,13 +145,17 @@ public sealed class LibraryDb : IDisposable
     {
         lock (_lock)
         {
-            RebuildAlbumFoldersUnlocked(OpenConnectionUnlocked());
+            var conn = OpenConnectionUnlocked();
+            using var transaction = conn.BeginTransaction();
+            RebuildAlbumFoldersUnlocked(conn, transaction);
+            transaction.Commit();
         }
     }
 
-    private void RebuildAlbumFoldersUnlocked(SqliteConnection conn)
+    private void RebuildAlbumFoldersUnlocked(SqliteConnection conn, SqliteTransaction transaction)
     {
         using var list = conn.CreateCommand();
+        list.Transaction = transaction;
         list.CommandText =
             """
             SELECT t.id, t.path, t.album, t.album_artist, t.year, a.artwork_path
@@ -160,9 +181,10 @@ public sealed class LibraryDb : IDisposable
         foreach (var row in rows)
         {
             var folder = ArtworkCache.NormalizeFolder(Path.GetDirectoryName(row.Path));
-            var albumId = UpsertAlbumUnlocked(conn, row.Album, row.AlbumArtist, row.Year, row.Art, folder);
+            var albumId = UpsertAlbumUnlocked(conn, row.Album, row.AlbumArtist, row.Year, row.Art, folder, transaction);
 
             using var update = conn.CreateCommand();
+            update.Transaction = transaction;
             update.CommandText = "UPDATE tracks SET album_id=$album_id WHERE id=$id;";
             update.Parameters.AddWithValue("$album_id", albumId);
             update.Parameters.AddWithValue("$id", row.Id);
@@ -170,6 +192,7 @@ public sealed class LibraryDb : IDisposable
         }
 
         using var cleanup = conn.CreateCommand();
+        cleanup.Transaction = transaction;
         cleanup.CommandText =
             """
             DELETE FROM albums WHERE id NOT IN (SELECT DISTINCT album_id FROM tracks WHERE album_id IS NOT NULL);
@@ -196,6 +219,9 @@ public sealed class LibraryDb : IDisposable
         _connection?.Dispose();
         _connection = new SqliteConnection(_connectionString);
         _connection.Open();
+        using var pragmas = _connection.CreateCommand();
+        pragmas.CommandText = "PRAGMA foreign_keys=ON;";
+        pragmas.ExecuteNonQuery();
         return _connection;
     }
 
@@ -242,13 +268,15 @@ public sealed class LibraryDb : IDisposable
         string albumArtist,
         int year,
         string? artworkPath,
-        string? folderPath)
+        string? folderPath,
+        SqliteTransaction? transaction = null)
     {
         name = string.IsNullOrWhiteSpace(name) ? "Unknown Album" : name.Trim();
         albumArtist = string.IsNullOrWhiteSpace(albumArtist) ? "Unknown Artist" : albumArtist.Trim();
         var folder = ArtworkCache.NormalizeFolder(folderPath);
 
         using var find = conn.CreateCommand();
+        find.Transaction = transaction;
         find.CommandText =
             """
             SELECT id, year, artwork_path FROM albums
@@ -272,6 +300,7 @@ public sealed class LibraryDb : IDisposable
                 if ((year > 0 && year != currentYear) || (artworkPath is not null && artworkPath != currentArt))
                 {
                     using var update = conn.CreateCommand();
+                    update.Transaction = transaction;
                     update.CommandText =
                         """
                         UPDATE albums SET
@@ -290,6 +319,7 @@ public sealed class LibraryDb : IDisposable
         }
 
         using var insert = conn.CreateCommand();
+        insert.Transaction = transaction;
         insert.CommandText =
             """
             INSERT INTO albums(name, album_artist, year, artwork_path, folder_path)

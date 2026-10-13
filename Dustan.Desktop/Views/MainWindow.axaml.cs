@@ -50,6 +50,8 @@ public partial class MainWindow : Window
             "artists" => new ArtistsPage(_currentSearch),
             "tracks" => new TracksPage(_currentSearch),
             "library" => new LibrarySettingsPage(),
+            "videos" => new VideosPage(_currentSearch),
+            "tv" => new TvPage(),
             _ => new AlbumsPage(_currentSearch)
         };
 

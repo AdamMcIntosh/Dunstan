@@ -17,6 +17,7 @@ public sealed class AppServices
     public LibraryScanner Scanner { get; }
     public PlaybackService Playback { get; }
     public TagEditor Tags { get; }
+    public VideoLibrary Videos { get; } = new(Path.Combine(AppPaths.DataDirectory, "videos.json"));
 
     private AppServices(IMediaEngine mediaEngine)
     {
