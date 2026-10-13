@@ -28,7 +28,7 @@ chmod +x Dustan
 On Omarchy / Arch, video playback also needs the decoder and subtitle plugins:
 
 ```bash
-sudo pacman -S --needed vlc vlc-plugins-base vlc-plugin-ffmpeg vlc-plugin-freetype vlc-plugin-ass
+sudo pacman -S --needed ffmpeg vlc vlc-plugins-base vlc-plugin-ffmpeg vlc-plugin-freetype vlc-plugin-ass
 ```
 
 The Avalonia desktop runs through X11/XWayland on Linux. Omarchy includes XWayland.
@@ -47,6 +47,8 @@ Use one canonical mount path per library. Scanning the same files from two diffe
 ## Videos
 
 Music remains available through Albums, Artists, Tracks and Library. **Videos** has its own folder and scan, independent of the music library. Mount the NAS video share on Linux, then choose it in Videos and select **Save & scan**. Scan cancellation or errors retain the previous catalog; unchanged files reuse cached durations.
+
+Video scanning requires **FFmpeg's `ffprobe`** on PATH (or beside the Dustan executable). On Debian/Ubuntu install `ffmpeg`; on Windows/macOS install FFmpeg and make `ffprobe` available on PATH. Metadata is read in a separate process with a 20-second per-file timeout, so a native parser failure cannot crash Dustan. Failed or timed-out files remain browsable with an unknown duration and are excluded from TV scheduling until a successful rescan.
 
 - Browse/search video cards and filter by Continue watching, Unwatched or Watched.
 - Supported file extensions: MKV, MP4, M4V, AVI, MOV, WMV, WebM, TS, M2TS, MPG and MPEG. Actual codec support depends on your installed LibVLC plugins.

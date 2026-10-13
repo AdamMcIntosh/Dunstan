@@ -2,6 +2,21 @@ using Dustan.Models;
 using Dustan.Playback;
 using Dustan.Services;
 
+if (args.Length > 1 && args[0] == "--probe-fixture")
+{
+    switch (Path.GetFileName(args[^1]))
+    {
+        case "failed.mkv": Environment.Exit(139); break;
+        case "invalid.mkv": Console.WriteLine("not json"); break;
+        case "unknown.mkv": Console.WriteLine("{\"format\":{\"duration\":\"N/A\"}}"); break;
+        case "hang.mkv":
+            File.WriteAllText(args[^1] + ".pid", Environment.ProcessId.ToString());
+            Thread.Sleep(30000); break;
+        default: Console.WriteLine("{\"format\":{\"duration\":\"123.456\"}}"); break;
+    }
+    return;
+}
+
 if (args.Length == 2 && args[0] == "--instance-check")
 {
     bool owns;
@@ -36,6 +51,37 @@ var temp = Path.Combine(Path.GetTempPath(), "dustan-tests-" + Guid.NewGuid().ToS
 Directory.CreateDirectory(temp);
 try
 {
+    var testAssembly = typeof(FakeMediaEngine).Assembly.Location;
+    using (var probe = new VideoProbe("dotnet", TimeSpan.FromSeconds(2), [testAssembly, "--probe-fixture"]))
+    {
+        Check(await probe.GetDurationAsync(Path.Combine(temp, "movie with spaces.mkv"), CancellationToken.None) == 123.456, "Isolated probe preserves filename arguments and fractional runtime");
+        Check(await probe.GetDurationAsync(Path.Combine(temp, "failed.mkv"), CancellationToken.None) == 0, "Parser process failure cannot terminate application");
+        Check(await probe.GetDurationAsync(Path.Combine(temp, "invalid.mkv"), CancellationToken.None) == 0, "Malformed probe output leaves duration unknown");
+        Check(await probe.GetDurationAsync(Path.Combine(temp, "unknown.mkv"), CancellationToken.None) == 0, "Unknown probe duration handled");
+        var hang = Path.Combine(temp, "hang.mkv");
+        Check(await probe.GetDurationAsync(hang, CancellationToken.None) == 0, "Hung parser times out without failing scan");
+        var pid = int.Parse(File.ReadAllText(hang + ".pid"));
+        bool alive;
+        try { using var process = System.Diagnostics.Process.GetProcessById(pid); alive = !process.HasExited; }
+        catch (ArgumentException) { alive = false; }
+        Check(!alive, "Timed-out parser is reaped");
+        using var cancelProbe = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+        var cancelled = false;
+        try { await probe.GetDurationAsync(hang, cancelProbe.Token); }
+        catch (OperationCanceledException) { cancelled = true; }
+        Check(cancelled, "Probe propagates user cancellation");
+        pid = int.Parse(File.ReadAllText(hang + ".pid"));
+        try { using var process = System.Diagnostics.Process.GetProcessById(pid); alive = !process.HasExited; }
+        catch (ArgumentException) { alive = false; }
+        Check(!alive, "Cancelled parser is reaped");
+    }
+    using (var missing = new VideoProbe(Path.Combine(temp, "missing-ffprobe")))
+    {
+        var explained = false;
+        try { await missing.GetDurationAsync("video.mp4", CancellationToken.None); }
+        catch (InvalidOperationException ex) { explained = ex.Message.Contains("Install FFmpeg"); }
+        Check(explained, "Missing ffprobe reports actionable installation error");
+    }
     using (var instance = new SingleInstance(temp))
     {
         Check(instance.IsOwner, "First process acquires instance lock");
@@ -137,7 +183,7 @@ if (args.Length == 2 && args[0] == "--media")
     LibVLCSharp.Shared.Core.Initialize();
     using var probe = new VideoProbe();
     var duration = await probe.GetDurationAsync(Path.GetFullPath(args[1]), CancellationToken.None);
-    Check(duration > 0, $"Native VLC probes video duration ({duration:F2}s)");
+    Check(duration > 0, $"Isolated ffprobe reads video duration ({duration:F2}s)");
     using var vlc = new LibVLCSharp.Shared.LibVLC("--quiet", "--vout=dummy", "--aout=dummy");
     using var media = new LibVLCSharp.Shared.Media(vlc, Path.GetFullPath(args[1]), LibVLCSharp.Shared.FromType.FromPath);
     using var player = new LibVLCSharp.Shared.MediaPlayer(vlc);
@@ -161,6 +207,25 @@ if (args.Length == 2 && args[0] == "--database-copy")
     Check((string?)cmd.ExecuteScalar() == "ok", "Migrated library copy passes integrity check");
 }
 Console.WriteLine($"{passed} checks passed.");
+
+if (args.Length == 3 && args[0] == "--scan-library")
+{
+    var library = new VideoLibrary(args[2]);
+    using var probe = new VideoProbe();
+    var timer = System.Diagnostics.Stopwatch.StartNew();
+    var lastReport = TimeSpan.Zero;
+    var progress = new Progress<string>(_ =>
+    {
+        if (timer.Elapsed - lastReport > TimeSpan.FromSeconds(20))
+        {
+            lastReport = timer.Elapsed;
+            Console.WriteLine($"NAS scan in progress: {timer.Elapsed.TotalSeconds:F0}s");
+        }
+    });
+    var count = await library.ScanAsync(args[1], probe.GetDurationAsync, progress, CancellationToken.None);
+    Console.WriteLine($"NAS scan saved {count} videos in {timer.Elapsed.TotalSeconds:F1}s; {library.Videos.Count(v => v.DurationSeconds <= 0)} unknown durations");
+    Check(new VideoLibrary(args[2]).Videos.Count == count, "Full NAS catalog saves and reloads");
+}
 
 sealed class FakeMediaEngine : IMediaEngine
 {
