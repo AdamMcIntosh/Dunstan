@@ -14,7 +14,22 @@ Item {
     implicitHeight: size
     readonly property var glyph: Theme.icons[name] || ({})
 
+    // Separate primitives keep both pause bars visible across graphics backends.
+    Repeater {
+        model: root.name === "pause" ? 2 : 0
+        Rectangle {
+            required property int index
+            x: (6.5 + index * 6.8) * root.width / 24
+            y: 5 * root.height / 24
+            width: 4.2 * root.width / 24
+            height: 14 * root.height / 24
+            radius: Math.min(root.width, root.height) / 24
+            color: root.color
+        }
+    }
+
     Shape {
+        visible: root.name !== "pause"
         width: 24
         height: 24
         scale: root.width / 24
